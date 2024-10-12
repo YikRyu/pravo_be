@@ -1,0 +1,89 @@
+package com.example.pravo.controller;
+
+import com.example.pravo.dto.ChartRewardsDto;
+import com.example.pravo.dto.RewardEntryDto;
+import com.example.pravo.mapper.MapStructMapper;
+import com.example.pravo.models.Reward;
+import com.example.pravo.services.RewardService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+@RestController
+@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/api/v1/")
+public class RewardController {
+    @Autowired
+    private RewardService rewardService;
+    @Autowired
+    private MapStructMapper mapper;
+
+    @GetMapping(path = "/reward")
+    public ResponseEntity<Map<String, Object>> getRewards(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Reward> rewards = rewardService.getRewards(pageable);
+
+        List<Reward> data = rewards.getContent();
+        long numberOfElements = rewards.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/reward/details")
+    public List<Reward> getRewardsDetails(
+            @RequestParam(value = "rewardId") List<Long> rewardIds
+    ) {
+        return rewardService.getRewardsDetails(rewardIds);
+    }
+
+    @GetMapping(path = "/reward/chart")
+    public List<ChartRewardsDto> getChartRewards(
+            @RequestBody List<Long> rewardIds
+    ){
+        return rewardService.getChartRewards(rewardIds);
+    }
+
+    @PostMapping(path = "/reward")
+    public Reward postReward(
+            @RequestBody RewardEntryDto newReward
+    ) {
+        return rewardService.postReward(newReward);
+    }
+
+    @PutMapping(path = "/reward/{rewardId}")
+    public Reward putReward(
+            @RequestBody RewardEntryDto reward,
+            @PathVariable(value = "rewardId") Long rewardId
+    ) {
+        return rewardService.putReward(reward, rewardId);
+    }
+
+    @DeleteMapping(path = "/reward/{rewardId}")
+    public boolean deleteReward(
+            @PathVariable(value = "rewardId") Long rewardId
+    ){
+        return rewardService.deleteReward(rewardId);
+    }
+}

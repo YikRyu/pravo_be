@@ -1,0 +1,29 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/pravo
+    username: postgres
+    password: jun4832488
+    driverClassName: org.postgresql.Driver
+  #    url: jdbc:h2:mem:testdb
+  #    username: sa
+  #    password:
+  #    driverClassName: org.h2.Driver
+  jpa:
+    generate-ddl: true
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+  mail:
+sts:
+  email:
+    url: http://localhost:4200
