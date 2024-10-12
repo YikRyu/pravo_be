@@ -13,6 +13,8 @@ public class UserDto {
     private String name;
     private String type;
     private Integer points;
-    private String contactNo;
+    private String position;
+    private String department;
+    private String contact;
     private String address;
 }
