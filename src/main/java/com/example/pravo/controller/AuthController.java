@@ -77,8 +77,13 @@ public class AuthController {
     }
 
     @PutMapping(path = "/auth/updatePassword/{userId}")
-    public UserDto updatePassword(@RequestBody PasswordUpdateDto newPassword, @PathVariable(value = "userId") String userId){
+    public UserDto updatePassword(@RequestBody PasswordUpdateDto newPassword, @PathVariable(value = "userId") String userId) {
         return authService.updatePassword(newPassword, userId);
+    }
+
+    @PutMapping(path = "/auth/updatePoints/{userId}")
+    public UserDto updatePoints(@RequestParam Integer points, @PathVariable(value = "userId") String userId) {
+        return authService.updatePoints(points, userId);
     }
 
 }
