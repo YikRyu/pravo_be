@@ -40,14 +40,40 @@ public class AuthController {
 
     @GetMapping(path = "/auth/users")
     public ResponseEntity<Map<String, Object>> getUsers(
-            @RequestParam(value = "userId") List<String> userIds,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
     ) {
         int totalItems = 0;
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = authService.getUsers(userIds, pageable);
+        Page<User> users = authService.getUsers(pageable);
+
+        List<User> data = users.getContent();
+        long numberOfElements = users.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+        //reformat data
+        List<UserDto> userData = data.stream().map(user -> mapper.toUserDto(user)).toList();
+        response.put("data", userData);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/auth/admins")
+    public ResponseEntity<Map<String, Object>> getAdmins(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<User> users = authService.getAdmins(pageable);
 
         List<User> data = users.getContent();
         long numberOfElements = users.getTotalElements();

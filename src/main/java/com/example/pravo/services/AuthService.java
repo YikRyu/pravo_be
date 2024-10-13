@@ -66,9 +66,12 @@ public class AuthService {
         return mapper.toUserDto(findUser(userId));
     }
 
-    public Page<User> getUsers(List<String> userIds, Pageable pageable){
-        FilterNode usersFilterNode = fb.field("id").in(fb.input(userIds)).get();
-        return authRepository.findAll(specificationConverter(usersFilterNode), pageable);
+    public Page<User> getUsers(Pageable pageable){
+        return authRepository.findByType("user" ,pageable);
+    }
+
+    public Page<User> getAdmins(Pageable pageable){
+        return authRepository.findByType("admin", pageable);
     }
 
     public UserDto postUser(UserEntryDto user){
