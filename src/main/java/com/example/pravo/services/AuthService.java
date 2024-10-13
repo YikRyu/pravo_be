@@ -66,9 +66,14 @@ public class AuthService {
         return mapper.toUserDto(findUser(userId));
     }
 
-    public List<UserDto> getAllUsers() {
-        List<User> allUsers = authRepository.findAll();
+    public List<UserDto> getAllUsers(String search) {
+        List<User> allUsers = authRepository.findAll(allUsersSearch(search));
+
         return allUsers.stream().map(user -> mapper.toUserDto(user)).toList();
+    }
+
+    private static Specification<User> allUsersSearch(String search) {
+        return (root, cq, cb) -> cb.or(cb.like(root.get("id"), "%" + search.toUpperCase() + "%") , cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"));
     }
 
     public Page<User> getUsers(Pageable pageable){

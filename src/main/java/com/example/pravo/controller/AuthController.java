@@ -33,9 +33,10 @@ public class AuthController {
         return authService.login(loginDto);
     }
 
+    //for searching for peer and referee
     @GetMapping(path = "/auth/allUsers")
-    public List<UserDto> getAllUsers(){
-        return authService.getAllUsers();
+    public List<UserDto> getAllUsers(@RequestParam(value = "search") String search){
+        return authService.getAllUsers(search);
     }
 
     @GetMapping(path = "/auth/user/{userId}")
