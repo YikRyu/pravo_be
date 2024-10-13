@@ -33,6 +33,11 @@ public class AuthController {
         return authService.login(loginDto);
     }
 
+    @GetMapping(path = "/auth/allUsers")
+    public List<UserDto> getAllUsers(){
+        return authService.getAllUsers();
+    }
+
     @GetMapping(path = "/auth/user/{userId}")
     public UserDto getUser(@PathVariable(value = "userId") String userId) {
         return authService.getUser(userId);

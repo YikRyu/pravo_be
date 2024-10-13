@@ -66,6 +66,11 @@ public class AuthService {
         return mapper.toUserDto(findUser(userId));
     }
 
+    public List<UserDto> getAllUsers() {
+        List<User> allUsers = authRepository.findAll();
+        return allUsers.stream().map(user -> mapper.toUserDto(user)).toList();
+    }
+
     public Page<User> getUsers(Pageable pageable){
         return authRepository.findByType("user" ,pageable);
     }
