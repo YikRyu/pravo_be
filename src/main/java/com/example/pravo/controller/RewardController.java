@@ -51,6 +51,31 @@ public class RewardController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping(path = "/reward/active")
+    public ResponseEntity<Map<String, Object>> getActiveRewards (
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ){
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Reward> rewards = rewardService.getActiveRewards(pageable);
+
+        List<Reward> data = rewards.getContent();
+        long numberOfElements = rewards.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
     @GetMapping(path = "/reward/details")
     public List<Reward> getRewardsDetails(
             @RequestParam(value = "rewardId") List<Long> rewardIds

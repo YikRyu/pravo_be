@@ -58,6 +58,10 @@ public class RewardService {
     }
 
     public Page<Reward> getRewards(Pageable pageable) {
+        return rewardRepository.findAll(pageable);
+    }
+
+    public Page<Reward> getActiveRewards(Pageable pageable) {
         return rewardRepository.findByActiveTrue(pageable);
     }
 
