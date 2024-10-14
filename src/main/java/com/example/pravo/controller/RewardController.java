@@ -83,7 +83,7 @@ public class RewardController {
         return rewardService.getRewardsDetails(rewardIds);
     }
 
-    @GetMapping(path = "/reward/chart")
+    @PostMapping(path = "/reward/chart")
     public List<ChartRewardsDto> getChartRewards(
             @RequestBody List<Long> rewardIds
     ){
