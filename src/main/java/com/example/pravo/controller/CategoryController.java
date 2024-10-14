@@ -49,9 +49,9 @@ public class CategoryController {
         return ResponseEntity.ok(response);
     }
 
-    @PostMapping(path = "/category/{categoryId}")
+    @PostMapping(path = "/category")
     public Category postCategory(
-            @RequestBody CategoryEntryDto category, @PathVariable(value = "categoryId") Long categoryId
+            @RequestBody CategoryEntryDto category
             ){
         return categoryService.postCategory(category);
     }
