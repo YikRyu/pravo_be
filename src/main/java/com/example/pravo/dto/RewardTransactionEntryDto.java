@@ -9,7 +9,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class RewardTransactionEntryDto {
     private Integer points;
-    private Long recognitionId;
     private String rewards;
     private String userId;
 }
