@@ -12,7 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
+import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -93,7 +93,7 @@ public class RewardController {
     @PostMapping(path = "/reward")
     public Reward postReward(
             @RequestBody RewardEntryDto newReward
-    ) {
+    ) throws SQLException {
         return rewardService.postReward(newReward);
     }
 
@@ -101,8 +101,16 @@ public class RewardController {
     public Reward putReward(
             @RequestBody RewardEntryDto reward,
             @PathVariable(value = "rewardId") Long rewardId
-    ) {
+    ) throws SQLException {
         return rewardService.putReward(reward, rewardId);
+    }
+
+    @PutMapping(path = "/reward/quantity/{rewardId}")
+    public Reward updateAmount(
+            @PathVariable(value = "rewardId") Long rewardId,
+            @RequestParam(value = "quantity") Integer quantity
+    ){
+        return rewardService.updateQuantity(rewardId, quantity);
     }
 
     @DeleteMapping(path = "/reward/{rewardId}")

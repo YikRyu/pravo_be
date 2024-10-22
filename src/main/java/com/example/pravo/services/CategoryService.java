@@ -1,5 +1,6 @@
 package com.example.pravo.services;
 
+import com.example.pravo.dto.CategoryDto;
 import com.example.pravo.dto.CategoryEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.Category;
@@ -54,7 +55,11 @@ public class CategoryService {
         return user;
     }
 
-    public Page<Category> getCategories(Pageable pageable){
+    public List<Category> getCategories(){
+        return categoryRepository.findAll();
+    }
+
+    public Page<Category> getCategoriesPageable(Pageable pageable){
         return categoryRepository.findAll(pageable);
     }
 
@@ -76,13 +81,14 @@ public class CategoryService {
         Category duplicateCategory = categoryRepository.findOne(specificationConverter(duplicateCategoryFilterNode)).orElse(null);
         if (duplicateCategory != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category already existed!");
 
-        Category newCategory = new Category();
+        Category updateCategory = categoryRepository.findById(categoryId).orElse(null);
+        if (updateCategory == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Category is not found!");
 
-        newCategory.setName(category.getName().trim());
-        newCategory.setModifiedBy(getUser(category.getModifiedBy()));
-        newCategory.setModifiedDate(LocalDateTime.now());
+        updateCategory.setName(category.getName().trim());
+        updateCategory.setModifiedBy(getUser(category.getModifiedBy()));
+        updateCategory.setModifiedDate(LocalDateTime.now());
 
-        return categoryRepository.save(newCategory);
+        return categoryRepository.save(updateCategory);
     }
 
     public boolean deleteCategory (Long categoryId) {

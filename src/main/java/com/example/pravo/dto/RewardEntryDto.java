@@ -11,9 +11,10 @@ public class RewardEntryDto {
     private String name;
     private String description;
     private Long category;
+    private Integer points;
     private boolean limited;
-    private Integer limitedAmount;
     private String limitedTime;
+    private String image;
     private String createdBy;
     private String modifiedBy;
 }

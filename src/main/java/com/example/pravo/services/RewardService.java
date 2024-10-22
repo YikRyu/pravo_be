@@ -12,6 +12,7 @@ import com.example.pravo.repository.RewardRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverterImpl;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -61,6 +62,7 @@ public class RewardService {
         return rewardRepository.findAll(pageable);
     }
 
+    @Transactional
     public Page<Reward> getActiveRewards(Pageable pageable) {
         return rewardRepository.findByActiveTrue(pageable);
     }
@@ -76,31 +78,9 @@ public class RewardService {
         return rewardRepository.findAll(specificationConverter(rewardsFilterNode));
     }
 
+    @Transactional
     public Reward postReward (RewardEntryDto reward) {
-        FilterNode duplicateRewardFilterNode = fb.field("name").equal(fb.input(reward.getName().trim())).get();
-        Reward duplicateReward = rewardRepository.findOne(specificationConverter(duplicateRewardFilterNode)).orElse(null);
-        if (duplicateReward != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward with a same name has already existed!");
-
-        Reward newReward = new Reward();
-        newReward.setName(reward.getName().trim());
-        newReward.setDescription(reward.getDescription().trim());
-        newReward.setCategory(getCategory(reward.getCategory()));
-        newReward.setLimited(reward.isLimited());
-        newReward.setLimitedAmount(reward.getLimitedAmount());
-        newReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
-        newReward.setCreatedBy(getUser(reward.getCreatedBy()));
-        newReward.setCreatedDate(LocalDateTime.now());
-        newReward.setActive(true);
-
-        return  rewardRepository.save(newReward);
-    }
-
-    public Reward putReward (RewardEntryDto reward, Long rewardId) {
-        FilterNode rewardFilterNode = fb.field("id").equal(fb.input(rewardId)).get();
-        Reward oldReward = rewardRepository.findOne(specificationConverter(rewardFilterNode)).orElse(null);
-        if (oldReward == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward does not exist!");
-
-        FilterNode duplicateRewardFilterNode = fb.field("name").equal(fb.input(reward.getName().trim())).get();
+        FilterNode duplicateRewardFilterNode = fb.field("name").equal(fb.input(reward.getName().trim())).and(fb.field("active").equal(fb.input(true))).get();
         List<Reward> duplicateReward = rewardRepository.findAll(specificationConverter(duplicateRewardFilterNode));
         if (!duplicateReward.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward with a same name has already existed!");
 
@@ -108,13 +88,47 @@ public class RewardService {
         newReward.setName(reward.getName().trim());
         newReward.setDescription(reward.getDescription().trim());
         newReward.setCategory(getCategory(reward.getCategory()));
+        newReward.setPoints(reward.getPoints());
         newReward.setLimited(reward.isLimited());
-        newReward.setLimitedAmount(reward.getLimitedAmount());
-        newReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
-        newReward.setModifiedBy(getUser(reward.getModifiedBy()));
-        newReward.setModifiedDate(LocalDateTime.now());
+        if(reward.getLimitedTime() != null) newReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
+        else newReward.setLimitedTime(null);
+        newReward.setImage(reward.getImage());
+        newReward.setCreatedBy(getUser(reward.getCreatedBy()));
+        newReward.setCreatedDate(LocalDateTime.now());
+        newReward.setActive(true);
 
         return  rewardRepository.save(newReward);
+    }
+
+    @Transactional
+    public Reward putReward (RewardEntryDto reward, Long rewardId) {
+        Reward oldReward = rewardRepository.findById(rewardId).orElse(null);
+        if (oldReward == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward does not exist!");
+
+        List<Reward> duplicateReward = rewardRepository.findByNameAndIdNotAndActiveTrue(reward.getName().trim(), rewardId);
+        if (!duplicateReward.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward with a same name has already existed!");
+
+        oldReward.setName(reward.getName().trim());
+        oldReward.setDescription(reward.getDescription().trim());
+        oldReward.setCategory(getCategory(reward.getCategory()));
+        oldReward.setPoints(reward.getPoints());
+        oldReward.setLimited(reward.isLimited());
+        if(reward.getLimitedTime() != null) oldReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
+        else oldReward.setLimitedTime(null);
+        oldReward.setImage(reward.getImage());
+        oldReward.setModifiedBy(getUser(reward.getModifiedBy()));
+        oldReward.setModifiedDate(LocalDateTime.now());
+
+        return  rewardRepository.save(oldReward);
+    }
+
+    public Reward updateQuantity (Long rewardId, Integer quantity){
+        Reward oldReward = rewardRepository.findById(rewardId).orElse(null);
+        if (oldReward == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward does not exist!");
+
+        oldReward.setQuantity(quantity);
+
+        return rewardRepository.save(oldReward);
     }
 
     public boolean deleteReward (Long rewardId) {

@@ -114,8 +114,18 @@ public class AuthController {
     }
 
     @PutMapping(path = "/auth/updatePoints/{userId}")
-    public UserDto updatePoints(@RequestParam Integer points, @PathVariable(value = "userId") String userId) {
+    public UserDto updatePoints(@RequestParam(value = "points") Integer points, @PathVariable(value = "userId") String userId) {
         return authService.updatePoints(points, userId);
+    }
+
+    @PutMapping(path = "/auth/reactivateUser/{userId}")
+    public UserDto reactivateUser(@PathVariable(value = "userId") String userId){
+        return authService.reactivateUser(userId);
+    }
+
+    @DeleteMapping(path = "/auth/{userId}")
+    public boolean deleteUser(@PathVariable(value = "userId") String userId){
+        return authService.deleteUser(userId);
     }
 
 }

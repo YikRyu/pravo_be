@@ -25,14 +25,19 @@ public class CategoryController {
     private MapStructMapper mapper;
 
     @GetMapping(path = "/category")
-    public ResponseEntity<Map<String, Object>> getCategories(
+    public List<Category> getCategories(){
+        return categoryService.getCategories();
+    }
+
+    @GetMapping(path = "/category/pageable")
+    public ResponseEntity<Map<String, Object>> getCategoriesPageable(
             @RequestParam(value = "page") int page,
             @RequestParam(value = "size") int size
     ){
         int totalItems = 0;
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Category> categories = categoryService.getCategories(pageable);
+        Page<Category> categories = categoryService.getCategoriesPageable(pageable);
 
         List<Category> data = categories.getContent();
         long numberOfElements = categories.getTotalElements();

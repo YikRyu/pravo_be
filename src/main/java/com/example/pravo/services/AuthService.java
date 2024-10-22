@@ -2,6 +2,7 @@ package com.example.pravo.services;
 
 import com.example.pravo.dto.*;
 import com.example.pravo.mapper.MapStructMapper;
+import com.example.pravo.models.Reward;
 import com.example.pravo.models.User;
 import com.example.pravo.repository.AuthRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
@@ -135,5 +136,27 @@ public class AuthService {
         updateUser.setPoints(points);
 
         return mapper.toUserDto(authRepository.save(updateUser));
+    }
+
+    public UserDto reactivateUser(String userId){
+        User user = authRepository.findById(userId).orElse(null);
+        if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
+        else{
+            user.setActive(true);
+            return mapper.toUserDto(authRepository.save(user));
+
+        }
+    }
+
+    public boolean deleteUser (String userId) {
+        User user = authRepository.findById(userId).orElse(null);
+        if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
+        else{
+            user.setActive(false);
+            authRepository.save(user);
+
+            return true;
+        }
+
     }
 }

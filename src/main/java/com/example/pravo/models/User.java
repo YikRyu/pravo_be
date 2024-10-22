@@ -51,4 +51,7 @@ public class User {
     @Length(max = 255)
     @Column
     String address;
+
+    @Column
+    boolean active;
 }

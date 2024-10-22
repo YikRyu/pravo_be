@@ -17,4 +17,6 @@ public class UserDto {
     private String department;
     private String contact;
     private String address;
+
+    private boolean active;
 }
