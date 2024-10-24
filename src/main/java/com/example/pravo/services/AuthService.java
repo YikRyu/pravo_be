@@ -33,13 +33,20 @@ public class AuthService {
     @Autowired
     private FilterSpecificationConverterImpl filterService;
 
-    private Specification<User> specificationConverter(FilterNode filterNode){
+    private static Specification<User> allUsersSearch(String search, String userId) {
+        return (root, cq, cb) -> cb.and(
+                cb.or(cb.like(root.get("id"), "%" + search.toUpperCase() + "%"), cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")),
+                cb.notEqual(root.get("id"), userId)
+                );
+    }
+
+    private Specification<User> specificationConverter(FilterNode filterNode) {
         return filterService.convert(filterNode);
     }
 
-    private User findUser(String userId){
+    private User findUser(String userId) {
         User user = authRepository.findById(userId).orElse(null);
-        if(user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No user found with provided ID!");
+        if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No user found with provided ID!");
 
         return user;
     }
@@ -56,43 +63,42 @@ public class AuthService {
 
         //find and return if the email and password match, else throw error
         User auth = authRepository.findOne(specificationConverter(authSpec)).orElse(null);
-        if(auth == null){
+        if (auth == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are not match!");
         }
 
         return mapper.toUserDto(auth);
     }
 
-    public UserDto getUser(String userId){
+    public UserDto getUser(String userId) {
         return mapper.toUserDto(findUser(userId));
     }
 
-    public List<UserDto> getAllUsers(String search) {
-        List<User> allUsers = authRepository.findAll(allUsersSearch(search));
+    public List<UserDto> getAllUsers(String search, String userId) {
+        List<User> allUsers = authRepository.findAll(allUsersSearch(search, userId));
 
         return allUsers.stream().map(user -> mapper.toUserDto(user)).toList();
     }
 
-    private static Specification<User> allUsersSearch(String search) {
-        return (root, cq, cb) -> cb.or(cb.like(root.get("id"), "%" + search.toUpperCase() + "%") , cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%"));
+    public Page<User> getUsers(Pageable pageable, String userId) {
+        return authRepository.findByTypeAndIdNot("user", userId, pageable);
     }
 
-    public Page<User> getUsers(Pageable pageable){
-        return authRepository.findByType("user" ,pageable);
+    public Page<User> getAdmins(Pageable pageable, String userId) {
+        return authRepository.findByTypeAndIdNot("admin", userId, pageable);
     }
 
-    public Page<User> getAdmins(Pageable pageable){
-        return authRepository.findByType("admin", pageable);
-    }
-
-    public UserDto postUser(UserEntryDto user){
+    public UserDto postUser(UserEntryDto user) {
         //duplicate user check with ID
-        findUser(user.getId().toUpperCase());
+        User duplicateId = authRepository.findById(user.getId().toUpperCase()).orElse(null);
+        if (duplicateId != null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with this ID already existed!");
 
         //duplicate user check with email
         FilterNode duplicateEmailFilterNode = fb.field("email").equal(fb.input(user.getEmail().toLowerCase())).get();
         User duplicateUserEmail = authRepository.findOne(specificationConverter(duplicateEmailFilterNode)).orElse(null);
-        if (duplicateUserEmail != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with this email already existed!");
+        if (duplicateUserEmail != null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User with this email already existed!");
 
         User newUser = new User();
         newUser.setId(user.getId().toUpperCase());
@@ -104,11 +110,12 @@ public class AuthService {
         newUser.setDepartment(user.getDepartment().trim());
         newUser.setContact(user.getContact());
         newUser.setAddress(user.getAddress().trim());
+        newUser.setActive(true);
 
         return mapper.toUserDto(authRepository.save(newUser));
     }
 
-    public UserDto putUser(UserUpdateDto user, String userId){
+    public UserDto putUser(UserUpdateDto user, String userId) {
         User updateUser = findUser(userId);
 
         updateUser.setName(user.getName().trim());
@@ -121,16 +128,17 @@ public class AuthService {
         return mapper.toUserDto(authRepository.save(updateUser));
     }
 
-    public UserDto updatePassword(PasswordUpdateDto updatePassword, String userId){
+    public UserDto updatePassword(PasswordUpdateDto updatePassword, String userId) {
         User updateUser = findUser(userId);
 
-        if(!Objects.equals(updateUser.getPassword(), updatePassword.getOldPassword().trim())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password provided are not the same!");
+        if (!Objects.equals(updateUser.getPassword(), updatePassword.getOldPassword().trim()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password provided are not the same!");
         updateUser.setPassword(updatePassword.getNewPassword().trim());
 
         return mapper.toUserDto(authRepository.save(updateUser));
     }
 
-    public UserDto updatePoints(Integer points, String userId){
+    public UserDto updatePoints(Integer points, String userId) {
         User updateUser = findUser(userId);
 
         updateUser.setPoints(points);
@@ -138,20 +146,20 @@ public class AuthService {
         return mapper.toUserDto(authRepository.save(updateUser));
     }
 
-    public UserDto reactivateUser(String userId){
+    public UserDto reactivateUser(String userId) {
         User user = authRepository.findById(userId).orElse(null);
         if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
-        else{
+        else {
             user.setActive(true);
             return mapper.toUserDto(authRepository.save(user));
 
         }
     }
 
-    public boolean deleteUser (String userId) {
+    public boolean deleteUser(String userId) {
         User user = authRepository.findById(userId).orElse(null);
         if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
-        else{
+        else {
             user.setActive(false);
             authRepository.save(user);
 

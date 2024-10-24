@@ -35,8 +35,11 @@ public class AuthController {
 
     //for searching for peer and referee
     @GetMapping(path = "/auth/allUsers")
-    public List<UserDto> getAllUsers(@RequestParam(value = "search") String search){
-        return authService.getAllUsers(search);
+    public List<UserDto> getAllUsers(
+            @RequestParam(value = "search") String search,
+            @RequestParam(value = "userId") String userId
+    ){
+        return authService.getAllUsers(search, userId);
     }
 
     @GetMapping(path = "/auth/user/{userId}")
@@ -47,12 +50,13 @@ public class AuthController {
     @GetMapping(path = "/auth/users")
     public ResponseEntity<Map<String, Object>> getUsers(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "userId") String userId
     ) {
         int totalItems = 0;
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = authService.getUsers(pageable);
+        Page<User> users = authService.getUsers(pageable, userId);
 
         List<User> data = users.getContent();
         long numberOfElements = users.getTotalElements();
@@ -74,12 +78,13 @@ public class AuthController {
     @GetMapping(path = "/auth/admins")
     public ResponseEntity<Map<String, Object>> getAdmins(
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "10") int size
+            @RequestParam(value = "size", defaultValue = "10") int size,
+            @RequestParam(value = "userId") String userId
     ) {
         int totalItems = 0;
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        Page<User> users = authService.getAdmins(pageable);
+        Page<User> users = authService.getAdmins(pageable, userId);
 
         List<User> data = users.getContent();
         long numberOfElements = users.getTotalElements();

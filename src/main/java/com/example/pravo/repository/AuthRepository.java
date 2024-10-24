@@ -10,5 +10,5 @@ import org.springframework.data.jpa.repository.Query;
 import java.util.List;
 
 public interface AuthRepository extends JpaRepository<User, String>, JpaSpecificationExecutor<User> {
-    public Page<User> findByType(String type,Pageable pageable);
+    public Page<User> findByTypeAndIdNot(String type, String id,Pageable pageable);
 }
