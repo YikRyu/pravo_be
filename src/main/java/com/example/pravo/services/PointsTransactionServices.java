@@ -2,8 +2,8 @@ package com.example.pravo.services;
 
 import com.example.pravo.dto.PointTransactionEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
-import com.example.pravo.models.Recognition;
 import com.example.pravo.models.PointsTransaction;
+import com.example.pravo.models.Recognition;
 import com.example.pravo.models.User;
 import com.example.pravo.repository.AuthRepository;
 import com.example.pravo.repository.RecognitionRepository;
@@ -11,6 +11,7 @@ import com.example.pravo.repository.PointsTransactionRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverterImpl;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,6 +43,13 @@ public class PointsTransactionServices {
         return filterService.convert(filterNode);
     }
 
+    private static Specification<PointsTransaction> createdBy( String userIdEntry) {
+        return (root, cq, cb) -> {
+            Join<PointsTransaction, User> userId = root.join("userId");
+            return cb.equal(userId.get("id"), userIdEntry);
+        };
+    }
+
     private User getUser(String userId){
         User user = authRepository.findById(userId).orElse(null);
         if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
@@ -50,8 +58,7 @@ public class PointsTransactionServices {
     }
 
     public Page<PointsTransaction> getRecognitionTransactions(String userId, Pageable pageable){
-        FilterNode filterNode = fb.field("user_id").equal(fb.input(userId)).get();
-        return pointsTransactionRepository.findAll(specificationConverter(filterNode), pageable);
+        return pointsTransactionRepository.findAll(createdBy(userId), pageable);
     }
 
     public PointsTransaction postRecognitionTransaction(PointTransactionEntryDto transaction){

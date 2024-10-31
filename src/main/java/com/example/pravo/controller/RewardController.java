@@ -2,6 +2,7 @@ package com.example.pravo.controller;
 
 import com.example.pravo.dto.ChartRewardsDto;
 import com.example.pravo.dto.RewardEntryDto;
+import com.example.pravo.dto.RewardQuantityBulkEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.Reward;
 import com.example.pravo.services.RewardService;
@@ -105,10 +106,17 @@ public class RewardController {
         return rewardService.putReward(reward, rewardId);
     }
 
+    @PutMapping(path = "/reward/quantity/bulk")
+    public List<Reward> bulkUpdateAmount(
+            @RequestBody List<RewardQuantityBulkEntryDto> bulkReward
+    ){
+        return rewardService.bulkUpdateQuantity(bulkReward);
+    }
+
     @PutMapping(path = "/reward/quantity/{rewardId}")
     public Reward updateAmount(
             @PathVariable(value = "rewardId") Long rewardId,
-            @RequestParam(value = "quantity") Integer quantity
+            @RequestParam(value = "quantity") int quantity
     ){
         return rewardService.updateQuantity(rewardId, quantity);
     }

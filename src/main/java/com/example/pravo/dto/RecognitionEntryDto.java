@@ -11,6 +11,8 @@ public class RecognitionEntryDto {
     private String title;
     private String description;
     private String type;
+    private Integer points;
+    private String status;
     private String referee;
     private String peer;
     private String createdBy;

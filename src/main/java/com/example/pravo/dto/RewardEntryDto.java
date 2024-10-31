@@ -12,6 +12,7 @@ public class RewardEntryDto {
     private String description;
     private Long category;
     private Integer points;
+    private Integer quantity;
     private boolean limited;
     private String limitedTime;
     private String image;

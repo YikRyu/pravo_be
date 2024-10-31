@@ -11,5 +11,5 @@ import java.util.List;
 public interface RewardRepository extends JpaRepository<Reward, Long>, JpaSpecificationExecutor<Reward> {
     public Page<Reward> findByActiveTrue(Pageable pageable);
     public List<Reward> findByNameAndIdNotAndActiveTrue(String name, Long rewardId);
-    public List<Reward> findByNameAndActiveTrue(String name);
+    public Page<Reward> findByNameAndActiveTrue(String name, Pageable pageable);
 }

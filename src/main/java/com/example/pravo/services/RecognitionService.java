@@ -10,6 +10,7 @@ import com.example.pravo.repository.RecognitionRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverterImpl;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Slf4j
@@ -39,6 +41,27 @@ public class RecognitionService {
         return filterService.convert(filterNode);
     }
 
+    private static Specification<Recognition> createdBy( String userId) {
+        return (root, cq, cb) -> {
+            Join<Recognition, User> createdBy =root.join("createdBy");
+            return cb.equal(createdBy.get("id"), userId);
+        };
+    }
+
+    private static Specification<Recognition> getReferee( String userId) {
+        return (root, cq, cb) -> {
+            Join<Recognition, User> referee =root.join("referee");
+            return cb.equal(referee.get("id"), userId);
+        };
+    }
+
+    private static Specification<Recognition> getPeer( String userId) {
+        return (root, cq, cb) -> {
+            Join<Recognition, User> peer =root.join("peer");
+            return cb.equal(peer.get("id"), userId);
+        };
+    }
+
     private User getUser(String userId){
         User user = authRepository.findById(userId).orElse(null);
         if (user == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "User does not exist!");
@@ -46,9 +69,22 @@ public class RecognitionService {
         return user;
     }
 
-    public Page<Recognition> getRecognitions(String userId, Pageable pageable){
-        FilterNode filterNode = fb.field("user_id").equal(fb.input(userId)).get();
-        return recognitionRepository.findAll(specificationConverter(filterNode), pageable);
+    public Page<Recognition> getRecognitions(Pageable pageable){
+        return recognitionRepository.findAll(pageable);
+    }
+
+    public List<Recognition> getRecognitionForTransaction(List<Long> recognitionIds) { return recognitionRepository.findByIdIn(recognitionIds);}
+
+    public Page<Recognition> getMyRecognitions(String userId, Pageable pageable){
+        return recognitionRepository.findAll(createdBy(userId), pageable);
+    }
+
+    public Page<Recognition> getMyApprovalRecognitions(String userId, Pageable pageable){
+        return recognitionRepository.findAll(getReferee(userId), pageable);
+    }
+
+    public Page<Recognition> getPeerRecognitions(String userId, Pageable pageable){
+        return recognitionRepository.findAll(getPeer(userId), pageable);
     }
 
     public Recognition newRecognition(RecognitionEntryDto recognition){
@@ -59,6 +95,8 @@ public class RecognitionService {
         newRecognition.setTitle(recognition.getTitle().trim());
         newRecognition.setDescription(recognition.getDescription().trim());
         newRecognition.setType(recognition.getType());
+        newRecognition.setPoints(recognition.getPoints());
+        newRecognition.setStatus(recognition.getStatus());
         newRecognition.setCreatedBy(getUser(recognition.getCreatedBy()));
         newRecognition.setCreatedDate(LocalDateTime.now());
 

@@ -19,15 +19,16 @@ public class PointsTransaction {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     Long id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnoreProperties({"hibernateLazyInitializer"})
+    @JoinColumn(name="userId", referencedColumnName = "id")
+    User userId;
+
     @OneToOne
     @JsonIgnoreProperties({"hibernateLazyInitializer"})
     @JoinColumn(name="recognitionId", referencedColumnName = "id")
     Recognition recognitionId;
 
-    @OneToOne(fetch = FetchType.LAZY)
-    @JsonIgnoreProperties({"hibernateLazyInitializer"})
-    @JoinColumn(name="userId", referencedColumnName = "id")
-    User userId;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column

@@ -2,6 +2,7 @@ package com.example.pravo.services;
 
 import com.example.pravo.dto.ChartRewardsDto;
 import com.example.pravo.dto.RewardEntryDto;
+import com.example.pravo.dto.RewardQuantityBulkEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.Category;
 import com.example.pravo.models.Reward;
@@ -23,6 +24,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -80,18 +83,25 @@ public class RewardService {
 
     @Transactional
     public Reward postReward (RewardEntryDto reward) {
+        LocalDateTime limitedTime;
         FilterNode duplicateRewardFilterNode = fb.field("name").equal(fb.input(reward.getName().trim())).and(fb.field("active").equal(fb.input(true))).get();
         List<Reward> duplicateReward = rewardRepository.findAll(specificationConverter(duplicateRewardFilterNode));
         if (!duplicateReward.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward with a same name has already existed!");
+
+        if(reward.getLimitedTime() != null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            limitedTime = LocalDateTime.parse(reward.getLimitedTime(), formatter);
+        }else limitedTime = null;
+
 
         Reward newReward = new Reward();
         newReward.setName(reward.getName().trim());
         newReward.setDescription(reward.getDescription().trim());
         newReward.setCategory(getCategory(reward.getCategory()));
         newReward.setPoints(reward.getPoints());
+        newReward.setQuantity(reward.getQuantity());
         newReward.setLimited(reward.isLimited());
-        if(reward.getLimitedTime() != null) newReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
-        else newReward.setLimitedTime(null);
+        newReward.setLimitedTime(limitedTime);
         newReward.setImage(reward.getImage());
         newReward.setCreatedBy(getUser(reward.getCreatedBy()));
         newReward.setCreatedDate(LocalDateTime.now());
@@ -102,19 +112,25 @@ public class RewardService {
 
     @Transactional
     public Reward putReward (RewardEntryDto reward, Long rewardId) {
+        LocalDateTime limitedTime;
         Reward oldReward = rewardRepository.findById(rewardId).orElse(null);
         if (oldReward == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward does not exist!");
 
         List<Reward> duplicateReward = rewardRepository.findByNameAndIdNotAndActiveTrue(reward.getName().trim(), rewardId);
         if (!duplicateReward.isEmpty()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward with a same name has already existed!");
 
+        if(reward.getLimitedTime() != null){
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+            limitedTime = LocalDateTime.parse(reward.getLimitedTime(), formatter);
+        }else limitedTime = null;
+
         oldReward.setName(reward.getName().trim());
         oldReward.setDescription(reward.getDescription().trim());
         oldReward.setCategory(getCategory(reward.getCategory()));
         oldReward.setPoints(reward.getPoints());
+        oldReward.setQuantity(reward.getQuantity());
         oldReward.setLimited(reward.isLimited());
-        if(reward.getLimitedTime() != null) oldReward.setLimitedTime(LocalDateTime.parse(reward.getLimitedTime()));
-        else oldReward.setLimitedTime(null);
+        oldReward.setLimitedTime(limitedTime);
         oldReward.setImage(reward.getImage());
         oldReward.setModifiedBy(getUser(reward.getModifiedBy()));
         oldReward.setModifiedDate(LocalDateTime.now());
@@ -129,6 +145,20 @@ public class RewardService {
         oldReward.setQuantity(quantity);
 
         return rewardRepository.save(oldReward);
+    }
+
+    public List<Reward> bulkUpdateQuantity (List<RewardQuantityBulkEntryDto> bulkReward){
+        List<Reward> rewardList = new ArrayList<Reward>();
+
+        for (RewardQuantityBulkEntryDto reward: bulkReward){
+            Reward updateReward = rewardRepository.findById(reward.getRewardId()).orElse(null);
+            if (updateReward == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Reward does not exist!");
+            else updateReward.setQuantity(reward.getQuantity());
+
+            rewardList.add(updateReward);
+        }
+
+        return rewardRepository.saveAll(rewardList);
     }
 
     public boolean deleteReward (Long rewardId) {

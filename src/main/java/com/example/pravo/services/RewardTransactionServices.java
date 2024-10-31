@@ -4,7 +4,6 @@ import com.example.pravo.dto.ChartRewardTransactionDto;
 import com.example.pravo.dto.RewardTransactionEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.RewardTransaction;
-import com.example.pravo.models.Recognition;
 import com.example.pravo.models.User;
 import com.example.pravo.repository.AuthRepository;
 import com.example.pravo.repository.RewardTransactionRepository;
@@ -12,6 +11,7 @@ import com.example.pravo.repository.RecognitionRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverterImpl;
 import com.turkraft.springfilter.parser.node.FilterNode;
+import jakarta.persistence.criteria.Join;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -44,9 +44,15 @@ public class RewardTransactionServices {
         return filterService.convert(filterNode);
     }
 
+    private static Specification<RewardTransaction> createdBy(String userIdEntry) {
+        return (root, cq, cb) -> {
+            Join<RewardTransaction, User> userId = root.join("userId");
+            return cb.equal(userId.get("id"), userIdEntry);
+        };
+    }
+
     public Page<RewardTransaction> getRewardsTransactions(String userId, Pageable pageable){
-        FilterNode filterNode = fb.field("user_id").equal(fb.input(userId)).get();
-        return rewardTransactionRepository.findAll(specificationConverter(filterNode), pageable);
+        return rewardTransactionRepository.findAll(createdBy(userId), pageable);
     }
 
     public List<ChartRewardTransactionDto> getChartRewardTransactions(){

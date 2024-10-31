@@ -25,8 +25,41 @@ public class RecognitionController {
     @Autowired
     private MapStructMapper mapper;
 
-    @GetMapping(path = "/recognitions/{userId}")
+    @GetMapping(path = "/recognitions")
     public ResponseEntity<Map<String, Object>> getRecognitions(
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Recognition> recognitions = recognitionService.getRecognitions(pageable);
+
+        List<Recognition> data = recognitions.getContent();
+        long numberOfElements = recognitions.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/recognitions/transactions")
+    public List<Recognition> getRecognitionsForTransaction(
+            @RequestParam(value = "recognitionId") List<Long> recognitionIds
+    ) {
+        return recognitionService.getRecognitionForTransaction(recognitionIds);
+    }
+
+    @GetMapping(path = "/recognitions/{userId}")
+    public ResponseEntity<Map<String, Object>> getMyRecognitions(
             @PathVariable(value = "userId") String userId,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "10") int size
@@ -34,7 +67,61 @@ public class RecognitionController {
         int totalItems = 0;
         Map<String, Object> response = new HashMap<>();
         Pageable pageable = PageRequest.of(page, size);
-        Page<Recognition> recognitions = recognitionService.getRecognitions(userId, pageable);
+        Page<Recognition> recognitions = recognitionService.getMyRecognitions(userId, pageable);
+
+        List<Recognition> data = recognitions.getContent();
+        long numberOfElements = recognitions.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/recognitions/approval/{userId}")
+    public ResponseEntity<Map<String, Object>> getMyApprovalRecognitions(
+            @PathVariable(value = "userId") String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Recognition> recognitions = recognitionService.getMyApprovalRecognitions(userId, pageable);
+
+        List<Recognition> data = recognitions.getContent();
+        long numberOfElements = recognitions.getTotalElements();
+
+        //convert total number of items as int if it doesnt reach long amount worth of amount...
+        if (numberOfElements < Integer.MAX_VALUE) {
+            totalItems = (int) numberOfElements;
+            response.put("totalItems", totalItems);
+        } else {
+            response.put("totalItems", numberOfElements);
+        }
+
+        response.put("data", data);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(path = "/recognitions/peer/{userId}")
+    public ResponseEntity<Map<String, Object>> getPeerRecognitions(
+            @PathVariable(value = "userId") String userId,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "10") int size
+    ) {
+        int totalItems = 0;
+        Map<String, Object> response = new HashMap<>();
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Recognition> recognitions = recognitionService.getPeerRecognitions(userId, pageable);
 
         List<Recognition> data = recognitions.getContent();
         long numberOfElements = recognitions.getTotalElements();
