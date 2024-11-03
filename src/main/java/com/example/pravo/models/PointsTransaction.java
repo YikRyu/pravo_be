@@ -29,7 +29,6 @@ public class PointsTransaction {
     @JoinColumn(name="recognitionId", referencedColumnName = "id")
     Recognition recognitionId;
 
-
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column
     LocalDateTime createdDate;

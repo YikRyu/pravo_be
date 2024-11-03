@@ -12,6 +12,7 @@ import com.turkraft.springfilter.builder.FilterBuilder;
 import com.turkraft.springfilter.converter.FilterSpecificationConverterImpl;
 import com.turkraft.springfilter.parser.node.FilterNode;
 import jakarta.persistence.criteria.Join;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -51,15 +52,18 @@ public class RewardTransactionServices {
         };
     }
 
+    @Transactional
     public Page<RewardTransaction> getRewardsTransactions(String userId, Pageable pageable){
         return rewardTransactionRepository.findAll(createdBy(userId), pageable);
     }
 
+    @Transactional
     public List<ChartRewardTransactionDto> getChartRewardTransactions(){
         List<RewardTransaction> transactions = rewardTransactionRepository.findAll();
         return transactions.stream().map(transaction -> mapper.toChartRewardTransactionDto(transaction)).toList();
     }
 
+    @Transactional
     public RewardTransaction postPointsTransaction(RewardTransactionEntryDto transaction){
         RewardTransaction rewardTransaction = new RewardTransaction();
 

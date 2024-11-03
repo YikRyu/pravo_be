@@ -6,6 +6,8 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Type;
+import org.w3c.dom.Text;
 
 import java.time.LocalDateTime;
 
@@ -22,9 +24,6 @@ public class RewardTransaction {
     @Column
     Integer points;
 
-    @Column
-    String rewards;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JsonIgnoreProperties({"hibernateLazyInitializer"})
     @JoinColumn(name="userId", referencedColumnName = "id")
@@ -33,4 +32,8 @@ public class RewardTransaction {
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
     @Column
     LocalDateTime createdDate;
+
+    @Lob
+    @Column(columnDefinition = "text")
+    String rewards;
 }
