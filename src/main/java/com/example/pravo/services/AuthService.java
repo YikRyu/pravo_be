@@ -67,6 +67,11 @@ public class AuthService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are not match!");
         }
 
+        //check if deactivated
+        if(auth.isActive() == true){
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your account is deactivated. Kindly contact your administrator for more details.");
+        }
+
         return mapper.toUserDto(auth);
     }
 
