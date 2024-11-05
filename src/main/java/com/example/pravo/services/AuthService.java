@@ -68,7 +68,7 @@ public class AuthService {
         }
 
         //check if deactivated
-        if(auth.isActive() == true){
+        if(auth.isActive() == false){
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your account is deactivated. Kindly contact your administrator for more details.");
         }
 
