@@ -133,7 +133,7 @@ public class AuthService {
     public UserDto updatePassword(PasswordUpdateDto updatePassword, String userId) {
         User updateUser = findUser(userId);
 
-        if (encoder.matches(updatePassword.getOldPassword().trim(), updateUser.getPassword()))
+        if (!encoder.matches(updatePassword.getOldPassword().trim(), updateUser.getPassword()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password provided are not the same!");
         updateUser.setPassword(encoder.encode(updatePassword.getNewPassword().trim()));
 
