@@ -1,9 +1,12 @@
 package com.example.pravo.controller;
 
+import com.example.pravo.dto.CreatedModifiedByDto;
+import com.example.pravo.dto.RecognitionDto;
 import com.example.pravo.dto.RecognitionEntryDto;
 import com.example.pravo.dto.RecognitionUpdateEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.Recognition;
+import com.example.pravo.models.User;
 import com.example.pravo.services.RecognitionService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,35 @@ public class RecognitionController {
     private RecognitionService recognitionService;
     @Autowired
     private MapStructMapper mapper;
+
+    private CreatedModifiedByDto mapCreatedModifiedBy(User user){
+        return mapper.toCreatedModifiedByDto(user);
+    }
+
+    private RecognitionDto mapRecognition (Recognition recognition){
+        RecognitionDto mappedRecognition = new RecognitionDto();
+
+        mappedRecognition.setId(recognition.getId());
+        mappedRecognition.setType(recognition.getType());
+        mappedRecognition.setTitle(recognition.getTitle());
+        mappedRecognition.setDescription(recognition.getDescription());
+        mappedRecognition.setPoints(recognition.getPoints());
+        mappedRecognition.setStatus(recognition.getStatus());
+        if(recognition.getReferee() != null) mappedRecognition.setReferee(mapCreatedModifiedBy(recognition.getReferee()));
+        else mappedRecognition.setReferee(null);
+        mappedRecognition.setRefereeApproval(recognition.getRefereeApproval());
+        if(recognition.getAdmin() != null) mappedRecognition.setAdmin(mapCreatedModifiedBy(recognition.getAdmin()));
+        else mappedRecognition.setAdmin(null);
+        mappedRecognition.setAdminApproval(recognition.getAdminApproval());
+        if(recognition.getPeer() != null) mappedRecognition.setPeer(mapCreatedModifiedBy(recognition.getPeer()));
+        else mappedRecognition.setPeer(null);
+        mappedRecognition.setCreatedBy(mapCreatedModifiedBy(recognition.getCreatedBy()));
+        mappedRecognition.setCreatedDate(recognition.getCreatedDate());
+        if (recognition.getModifiedBy() != null) mappedRecognition.setModifiedBy(mapCreatedModifiedBy(recognition.getModifiedBy()));
+        mappedRecognition.setModifiedDate(recognition.getModifiedDate());
+
+        return mappedRecognition;
+    }
 
     @GetMapping(path = "/recognitions")
     public ResponseEntity<Map<String, Object>> getRecognitions(
@@ -46,6 +78,11 @@ public class RecognitionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for(Recognition recognition: data){
+                mapRecognition(recognition);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);
@@ -80,6 +117,11 @@ public class RecognitionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for(Recognition recognition: data){
+                mapRecognition(recognition);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);
@@ -107,6 +149,11 @@ public class RecognitionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for(Recognition recognition: data){
+                mapRecognition(recognition);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);
@@ -134,6 +181,11 @@ public class RecognitionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for(Recognition recognition: data){
+                mapRecognition(recognition);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);

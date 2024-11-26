@@ -1,5 +1,7 @@
 package com.example.pravo.controller;
 
+import com.example.pravo.dto.CreatedModifiedByDto;
+import com.example.pravo.dto.PointTransactionDto;
 import com.example.pravo.dto.PointTransactionEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.PointsTransaction;
@@ -24,6 +26,21 @@ public class PointsTransactionController {
     @Autowired
     private MapStructMapper mapper;
 
+    private CreatedModifiedByDto mapCreatedModifiedBy(PointsTransaction transaction){
+        return mapper.toCreatedModifiedByDto(transaction.getUserId());
+    }
+
+    private PointTransactionDto mapTransaction (PointsTransaction transaction){
+        PointTransactionDto mappedTransaction = new PointTransactionDto();
+
+        mappedTransaction.setId(transaction.getId());
+        mappedTransaction.setUserId(mapCreatedModifiedBy(transaction));
+        mappedTransaction.setRecognitionId(transaction.getRecognitionId());
+        mappedTransaction.setCreatedDate(transaction.getCreatedDate());
+
+        return mappedTransaction;
+    }
+
     @GetMapping(path = "/recognitionTransactions/{userId}")
     public ResponseEntity<Map<String, Object>> getTransactions(
             @PathVariable(value = "userId") String userId,
@@ -46,6 +63,11 @@ public class PointsTransactionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for (PointsTransaction transaction: data){
+                mapTransaction(transaction);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);

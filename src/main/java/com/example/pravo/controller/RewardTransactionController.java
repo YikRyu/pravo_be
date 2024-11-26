@@ -1,9 +1,12 @@
 package com.example.pravo.controller;
 
 import com.example.pravo.dto.ChartRewardTransactionDto;
+import com.example.pravo.dto.CreatedModifiedByDto;
+import com.example.pravo.dto.RewardTransactionDto;
 import com.example.pravo.dto.RewardTransactionEntryDto;
 import com.example.pravo.mapper.MapStructMapper;
 import com.example.pravo.models.RewardTransaction;
+import com.example.pravo.models.User;
 import com.example.pravo.services.RewardTransactionServices;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,6 +27,22 @@ public class RewardTransactionController {
     private RewardTransactionServices rewardTransactionServices;
     @Autowired
     private MapStructMapper mapper;
+
+    private CreatedModifiedByDto mapCreatedModifiedBy(User user){
+        return mapper.toCreatedModifiedByDto(user);
+    }
+
+    private RewardTransactionDto mapTransaction (RewardTransaction transaction){
+        RewardTransactionDto mappedTransaction = new RewardTransactionDto();
+
+        mappedTransaction.setId(transaction.getId());
+        mappedTransaction.setPoints(transaction.getPoints());
+        mappedTransaction.setUserId(mapCreatedModifiedBy(transaction.getUserId()));
+        mappedTransaction.setCreatedDate(transaction.getCreatedDate());
+        mappedTransaction.setRewards(transaction.getRewards());
+
+        return mappedTransaction;
+    }
 
     @GetMapping(path = "/pointsTransactions/{userId}")
     public ResponseEntity<Map<String, Object>> getTransactions(
@@ -47,6 +66,11 @@ public class RewardTransactionController {
             response.put("totalItems", numberOfElements);
         }
 
+        if(!data.isEmpty()){
+            for (RewardTransaction transaction: data){
+                mapTransaction(transaction);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);

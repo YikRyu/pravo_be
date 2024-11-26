@@ -1,10 +1,10 @@
 package com.example.pravo.controller;
 
-import com.example.pravo.dto.ChartRewardsDto;
-import com.example.pravo.dto.RewardEntryDto;
-import com.example.pravo.dto.RewardQuantityBulkEntryDto;
+import com.example.pravo.dto.*;
 import com.example.pravo.mapper.MapStructMapper;
+import com.example.pravo.models.Category;
 import com.example.pravo.models.Reward;
+import com.example.pravo.models.User;
 import com.example.pravo.services.RewardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -27,6 +27,44 @@ public class RewardController {
     @Autowired
     private MapStructMapper mapper;
 
+    private CreatedModifiedByDto mapCreatedModifiedBy(User user){
+        return mapper.toCreatedModifiedByDto(user);
+    }
+
+    private RewardDto mapReward (Reward reward){
+        RewardDto mappedReward = new RewardDto();
+
+        mappedReward.setId(reward.getId());
+        mappedReward.setName(reward.getName());
+        mappedReward.setDescription(reward.getDescription());
+        mappedReward.setCategory(mapCategory(reward.getCategory()));
+        mappedReward.setPoints(reward.getPoints());
+        mappedReward.setQuantity(reward.getQuantity());
+        mappedReward.setLimited(reward.isLimited());
+        if(reward.getLimitedTime() != null) mappedReward.setLimitedTime(reward.getLimitedTime());
+        else mappedReward.setLimitedTime(null);
+        mappedReward.setCreatedBy(mapCreatedModifiedBy(reward.getCreatedBy()));
+        mappedReward.setCreatedDate(reward.getCreatedDate());
+        if (reward.getModifiedBy() != null) mappedReward.setModifiedBy(mapCreatedModifiedBy(reward.getModifiedBy()));
+        mappedReward.setModifiedDate(reward.getModifiedDate());
+
+        return mappedReward;
+    }
+
+    private CategoryDto mapCategory (Category category){
+        CategoryDto mappedCategory = new CategoryDto();
+
+        mappedCategory.setId(category.getId());
+        mappedCategory.setName(category.getName());
+        mappedCategory.setCreatedBy(mapCreatedModifiedBy(category.getCreatedBy()));
+        mappedCategory.setCreatedDate(category.getCreatedDate());
+        if (category.getModifiedBy() != null) mappedCategory.setModifiedBy(mapCreatedModifiedBy(category.getModifiedBy()));
+        else mappedCategory.setModifiedBy(null);
+        mappedCategory.setModifiedDate(category.getModifiedDate());
+
+        return mappedCategory;
+    }
+
     @GetMapping(path = "/reward")
     public ResponseEntity<Map<String, Object>> getRewards(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -46,6 +84,12 @@ public class RewardController {
             response.put("totalItems", totalItems);
         } else {
             response.put("totalItems", numberOfElements);
+        }
+
+        if(!data.isEmpty()){
+            for(Reward reward: data){
+                mapReward(reward);
+            }
         }
         response.put("data", data);
 
@@ -72,6 +116,12 @@ public class RewardController {
         } else {
             response.put("totalItems", numberOfElements);
         }
+
+        if(!data.isEmpty()){
+            for(Reward reward: data){
+                mapReward(reward);
+            }
+        }
         response.put("data", data);
 
         return ResponseEntity.ok(response);
@@ -88,7 +138,14 @@ public class RewardController {
     public List<ChartRewardsDto> getChartRewards(
             @RequestBody List<Long> rewardIds
     ){
-        return rewardService.getChartRewards(rewardIds);
+        List<ChartRewardsDto> data = rewardService.getChartRewards(rewardIds);
+
+        if(!data.isEmpty()){
+            for (ChartRewardsDto chartReward: data){
+                mapCategory(chartReward.getCategory());
+            }
+        }
+        return data;
     }
 
     @PostMapping(path = "/reward")

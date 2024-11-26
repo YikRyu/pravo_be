@@ -2,7 +2,6 @@ package com.example.pravo.services;
 
 import com.example.pravo.dto.*;
 import com.example.pravo.mapper.MapStructMapper;
-import com.example.pravo.models.Reward;
 import com.example.pravo.models.User;
 import com.example.pravo.repository.AuthRepository;
 import com.turkraft.springfilter.builder.FilterBuilder;
@@ -14,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -33,11 +33,14 @@ public class AuthService {
     @Autowired
     private FilterSpecificationConverterImpl filterService;
 
+    @Autowired
+    private PasswordEncoder encoder;
+
     private static Specification<User> allUsersSearch(String search, String userId) {
         return (root, cq, cb) -> cb.and(
                 cb.or(cb.like(root.get("id"), "%" + search.toUpperCase() + "%"), cb.like(cb.lower(root.get("name")), "%" + search.toLowerCase() + "%")),
                 cb.notEqual(root.get("id"), userId)
-                );
+        );
     }
 
     private Specification<User> specificationConverter(FilterNode filterNode) {
@@ -52,27 +55,20 @@ public class AuthService {
     }
 
     public UserDto login(LoginDto credentials) {
-        FilterNode emailFilterNode = fb.field("email").equal(fb.input(credentials.getEmail().toLowerCase())).get();
-        FilterNode authSpec = fb.field("email").equal(fb.input(credentials.getEmail().toLowerCase())).and(fb.field("password").equal(fb.input(credentials.getPassword()))).get();
+        FilterNode emailFilterNode = fb.field("email").equal(fb.input(credentials.getEmail().toLowerCase())).get();FilterNode authSpec = fb.field("email").equal(fb.input(credentials.getEmail().toLowerCase())).and(fb.field("password").equal(fb.input(encoder.encode(credentials.getPassword())))).get();
         //search if there is corresponding email
         List<User> userExist = authRepository.findAll(specificationConverter(emailFilterNode));
+        User user = new User();
 
         if (userExist.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email is not found registered! Please contact your Admin for registration or check the spelling!");
+        }else{
+            if(!encoder.matches(credentials.getPassword(), userExist.get(0).getPassword())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are not match!");
+            else if(userExist.get(0).isActive() == false)  throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your account is deactivated. Kindly contact your administrator for more details.");
+            else user = userExist.get(0);
         }
 
-        //find and return if the email and password match, else throw error
-        User auth = authRepository.findOne(specificationConverter(authSpec)).orElse(null);
-        if (auth == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email and password are not match!");
-        }
-
-        //check if deactivated
-        if(auth.isActive() == false){
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Your account is deactivated. Kindly contact your administrator for more details.");
-        }
-
-        return mapper.toUserDto(auth);
+        return mapper.toUserDto(user);
     }
 
     public UserDto getUser(String userId) {
@@ -108,9 +104,10 @@ public class AuthService {
         User newUser = new User();
         newUser.setId(user.getId().toUpperCase());
         newUser.setEmail(user.getEmail().toLowerCase());
-        newUser.setPassword(user.getPassword().trim());
+        newUser.setPassword(encoder.encode(user.getPassword().trim()));
         newUser.setName(user.getName().trim());
         newUser.setType(user.getType());
+        newUser.setPoints(0);
         newUser.setPosition(user.getPosition().trim());
         newUser.setDepartment(user.getDepartment().trim());
         newUser.setContact(user.getContact());
@@ -136,9 +133,9 @@ public class AuthService {
     public UserDto updatePassword(PasswordUpdateDto updatePassword, String userId) {
         User updateUser = findUser(userId);
 
-        if (!Objects.equals(updateUser.getPassword(), updatePassword.getOldPassword().trim()))
+        if (encoder.matches(updatePassword.getOldPassword().trim(), updateUser.getPassword()))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Old password provided are not the same!");
-        updateUser.setPassword(updatePassword.getNewPassword().trim());
+        updateUser.setPassword(encoder.encode(updatePassword.getNewPassword().trim()));
 
         return mapper.toUserDto(authRepository.save(updateUser));
     }
